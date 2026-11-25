@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MarkMoment</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header (44px) -->
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </span>
+        <span class="brand-name">MarkMoment</span>
+        <kbd class="kbd-hint" title="Phím tắt lưu nhanh tab hiện tại">Alt+S</kbd>
+      </div>
+      <div class="header-actions">
+        <button id="btn-search-toggle" type="button" class="icon-btn" aria-label="Tìm kiếm thẻ đã lưu" aria-expanded="false" title="Tìm kiếm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <div class="theme-picker-anchor">
+          <button id="btn-theme-toggle" type="button" class="icon-btn" aria-label="Tùy chỉnh giao diện" aria-haspopup="dialog" aria-expanded="false" title="Tùy chỉnh giao diện">
+            <!-- Icon populated by JS -->
+          </button>
+          <div id="theme-popover" class="theme-popover hidden" role="dialog" aria-label="Tùy chỉnh giao diện">
+            <div class="theme-popover-label">Chế độ</div>
+            <div class="theme-mode-row" role="group" aria-label="Chế độ sáng tối">
+              <button type="button" class="chip-btn" data-theme-mode="auto" aria-pressed="true">Tự động</button>
+              <button type="button" class="chip-btn" data-theme-mode="light" aria-pressed="false">Sáng</button>
+              <button type="button" class="chip-btn" data-theme-mode="dark" aria-pressed="false">Tối</button>
+            </div>
+            <div class="theme-popover-label">Bảng màu</div>
+            <div class="preset-grid-swatches" role="group" aria-label="Chọn bảng màu">
+              <button type="button" class="preset-swatch" data-theme-preset="indigo" aria-pressed="true" aria-label="Indigo mặc định" title="Indigo">
+                <span class="swatch-dot swatch-indigo" aria-hidden="true"></span>
+                <span>Indigo</span>
+              </button>
+              <button type="button" class="preset-swatch" data-theme-preset="paper" aria-pressed="false" aria-label="Warm Paper dịu mắt" title="Warm Paper">
+                <span class="swatch-dot swatch-paper" aria-hidden="true"></span>
+                <span>Paper</span>
+              </button>
+              <button type="button" class="preset-swatch" data-theme-preset="sage" aria-pressed="false" aria-label="Sage Focus tập trung" title="Sage Focus">
+                <span class="swatch-dot swatch-sage" aria-hidden="true"></span>
+                <span>Sage</span>
+              </button>
+              <button type="button" class="preset-swatch" data-theme-preset="rose" aria-pressed="false" aria-label="Soft Rose nhẹ nhàng" title="Soft Rose">
+                <span class="swatch-dot swatch-rose" aria-hidden="true"></span>
+                <span>Rose</span>
+              </button>
+              <button type="button" class="preset-swatch" data-theme-preset="mono" aria-pressed="false" aria-label="Mono Ink tối giản" title="Mono Ink">
+                <span class="swatch-dot swatch-mono" aria-hidden="true"></span>
+                <span>Mono</span>
+              </button>
+            </div>
+            <div class="theme-popover-divider" aria-hidden="true"></div>
+            <div class="sound-row">
+              <span class="sound-label">Âm thanh nhắc</span>
+              <div class="sound-controls">
+                <button id="btn-sound-test" type="button" class="icon-btn icon-btn-sm" aria-label="Nghe thử âm thanh thông báo" title="Nghe thử">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                </button>
+                <button id="btn-sound-toggle" type="button" class="toggle-switch" role="switch" aria-checked="true" aria-label="Bật hoặc tắt âm thanh thông báo">
+                  <span class="toggle-thumb" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Collapsible Search Bar -->
+    <div id="search-bar" class="search-bar hidden">
+      <label for="search-input" class="sr-only">Tìm kiếm tiêu đề, trang web hoặc ghi chú</label>
+      <input id="search-input" type="search" class="input" placeholder="Tìm tiêu đề, domain, tag, ghi chú..." autocomplete="off" />
+    </div>
+
+    <!-- Quick Capture Card -->
+    <section class="capture-section" aria-label="Tab hiện tại">
+      <div class="capture-card">
+        <div class="capture-top">
+          <div id="cap-icon" class="context-thumb doc" aria-hidden="true"></div>
+          <div class="capture-info">
+            <div class="capture-kicker">
+              <span>Tab hiện tại</span>
+              <select id="cap-tag" class="mini-select" aria-label="Chọn tag cho tab hiện tại">
+                <option value="Tiếng Anh">Tiếng Anh</option>
+                <option value="Học tập">Học tập</option>
+                <option value="Đọc sau">Đọc sau</option>
+                <option value="Xem sau">Xem sau</option>
+                <option value="Công việc">Công việc</option>
+              </select>
+            </div>
+            <div id="cap-title" class="capture-title">Đang đọc tab...</div>
+            <div id="cap-meta" class="capture-meta"></div>
+          </div>
+        </div>
+
+        <!-- Expandable Schedule Panel -->
+        <div id="schedule-panel" class="schedule-panel hidden">
+          <div class="schedule-panel-head">
+            <span class="schedule-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Chọn giờ nhắc quay lại</span>
+            </span>
+            <button id="btn-clear-schedule" type="button" class="text-link">Bỏ hẹn</button>
+          </div>
+
+          <div class="preset-grid">
+            <button type="button" class="chip-btn" data-preset="+15m">+15 phút</button>
+            <button type="button" class="chip-btn" data-preset="+30m">+30 phút</button>
+            <button type="button" class="chip-btn" data-preset="+1h">+1 giờ</button>
+            <button type="button" class="chip-btn" data-preset="tonight">Tối 20:00</button>
+            <button type="button" class="chip-btn" data-preset="tomorrow">Mai 09:00</button>
+          </div>
+
+          <div class="datetime-row">
+            <label for="sched-date" class="sr-only">Ngày nhắc</label>
+            <input id="sched-date" type="date" class="input input-sm" />
+            <label for="sched-time" class="sr-only">Giờ nhắc</label>
+            <input id="sched-time" type="time" class="input input-sm font-mono" value="20:30" />
+          </div>
+
+          <div class="repeat-row" role="group" aria-label="Tần suất lặp lại">
+            <button type="button" class="chip-btn" data-repeat="none" aria-pressed="true">Một lần</button>
+            <button type="button" class="chip-btn" data-repeat="daily" aria-pressed="false">Hằng ngày</button>
+            <button type="button" class="chip-btn" data-repeat="weekdays" aria-pressed="false">T2–T6</button>
+            <button type="button" class="chip-btn" data-repeat="custom" aria-pressed="false">Chọn thứ</button>
+          </div>
+
+          <div id="days-row" class="days-row hidden" role="group" aria-label="Chọn các thứ trong tuần">
+            <button type="button" class="day-btn" data-day="1" aria-pressed="true">T2</button>
+            <button type="button" class="day-btn" data-day="2" aria-pressed="false">T3</button>
+            <button type="button" class="day-btn" data-day="3" aria-pressed="true">T4</button>
+            <button type="button" class="day-btn" data-day="4" aria-pressed="false">T5</button>
+            <button type="button" class="day-btn" data-day="5" aria-pressed="true">T6</button>
+            <button type="button" class="day-btn" data-day="6" aria-pressed="false">T7</button>
+            <button type="button" class="day-btn" data-day="0" aria-pressed="false">CN</button>
+          </div>
+
+          <div>
+            <label for="sched-note" class="sr-only">Ghi chú nhắc nhở</label>
+            <input id="sched-note" type="text" class="input input-sm" maxlength="80" placeholder="Ghi chú (vd: Học tiếng Anh 20 phút)" />
+          </div>
+        </div>
+
+        <!-- Capture Actions -->
+        <div class="capture-actions">
+          <div class="capture-left-actions">
+            <button id="btn-toggle-schedule" type="button" class="btn-ghost-sm" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="schedule-btn-label">Hẹn giờ</span>
+            </button>
+            <label class="checkbox-label" title="Tự đóng tab sau khi lưu để gọn trình duyệt">
+              <input id="chk-close-tab" type="checkbox" />
+              <span>Đóng tab</span>
+            </label>
+          </div>
+          <button id="btn-save-now" type="button" class="btn-primary">Lưu ngay</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Missed Reminders Banner (conditional) -->
+    <div id="missed-banner" class="missed-banner hidden">
+      <div class="missed-text">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span id="missed-banner-label">Bạn có lịch nhắc vừa lỡ</span>
+      </div>
+      <div class="missed-actions">
+        <button id="btn-missed-open" type="button" class="text-link strong">Mở</button>
+        <button id="btn-missed-dismiss" type="button" class="text-link">Bỏ qua</button>
+      </div>
+    </div>
+
+    <!-- Simplified Filter Row -->
+    <div class="toolbar">
+      <div class="tab-strip" role="tablist" aria-label="Bộ lọc danh sách">
+        <button id="tab-saved" type="button" role="tab" aria-selected="true" class="tab-btn active">
+          <span>Đã lưu</span>
+          <span id="count-saved" class="tab-count">0</span>
+        </button>
+        <button id="tab-scheduled" type="button" role="tab" aria-selected="false" class="tab-btn">
+          <span>Lịch hẹn</span>
+          <span id="count-scheduled" class="tab-count">0</span>
+        </button>
+      </div>
+
+      <div class="tag-filter-wrap" id="tag-filter-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+        <label for="tag-filter" class="sr-only">Lọc theo tag</label>
+        <select id="tag-filter" class="select-ghost">
+          <option value="all">Tất cả tag</option>
+          <option value="Tiếng Anh">Tiếng Anh</option>
+          <option value="Học tập">Học tập</option>
+          <option value="Đọc sau">Đọc sau</option>
+          <option value="Xem sau">Xem sau</option>
+          <option value="Công việc">Công việc</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Saved Bookmarks List -->
+    <main id="bookmark-list" class="bookmark-list" aria-label="Danh sách thẻ đã lưu"></main>
+
+    <!-- Atomic Status / Undo Bar -->
+    <div id="status-bar" class="status-bar hidden" role="status" aria-live="polite" aria-atomic="true">
+      <span id="status-text" class="status-text"></span>
+      <button id="btn-undo" type="button" class="text-link strong hidden">Hoàn tác</button>
+    </div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
