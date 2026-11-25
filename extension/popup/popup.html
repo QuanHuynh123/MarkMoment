@@ -62,9 +62,26 @@
                 <button id="btn-sound-test" type="button" class="icon-btn icon-btn-sm" aria-label="Nghe thử âm thanh thông báo" title="Nghe thử">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
                 </button>
+                <button id="btn-sound-more" type="button" class="icon-btn icon-btn-sm" aria-label="Chọn kiểu âm thanh hoặc tải file riêng" aria-expanded="false" title="Tùy chọn âm thanh">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                </button>
                 <button id="btn-sound-toggle" type="button" class="toggle-switch" role="switch" aria-checked="true" aria-label="Bật hoặc tắt âm thanh thông báo">
                   <span class="toggle-thumb" aria-hidden="true"></span>
                 </button>
+              </div>
+            </div>
+            <div id="sound-drawer" class="sound-drawer hidden">
+              <div class="sound-source-row" role="group" aria-label="Kiểu âm thanh nhắc">
+                <button type="button" class="chip-btn" data-sound-source="chime" aria-pressed="true">Tình tinh</button>
+                <button type="button" class="chip-btn" data-sound-source="sample" aria-pressed="false">Mẫu (sena)</button>
+                <button type="button" class="chip-btn" data-sound-source="custom" aria-pressed="false">Tự chọn</button>
+              </div>
+              <div id="custom-sound-box" class="custom-sound-box hidden">
+                <span id="custom-sound-name" class="custom-sound-name">sena.mp3 (mẫu)</span>
+                <div class="custom-sound-actions">
+                  <button id="btn-upload-sound" type="button" class="chip-btn">Chọn file...</button>
+                  <button id="btn-reset-sound" type="button" class="text-link hidden">Đặt lại</button>
+                </div>
               </div>
             </div>
           </div>

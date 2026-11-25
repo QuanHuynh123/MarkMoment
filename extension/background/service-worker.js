@@ -7,6 +7,7 @@ import {
   extractDomain,
   formatContextBadge,
   isInjectableUrl,
+  normalizeSoundSource,
   normalizeThemePreset,
   normalizeUrlForMatch,
 } from '../shared/core.js';
@@ -17,6 +18,7 @@ import {
   deleteBookmark,
   getBookmarkById,
   getBookmarks,
+  getCustomSound,
   getMissedIds,
   getSettings,
   saveBookmarks,
@@ -64,8 +66,19 @@ async function ensureOffscreenDocument() {
 async function playNotificationSound(settings) {
   if (settings && settings.soundEnabled === false) return;
   try {
+    const soundSource = normalizeSoundSource(settings && settings.soundSource);
+    let customSoundDataUrl = '';
+    if (soundSource === 'custom') {
+      const custom = await getCustomSound();
+      customSoundDataUrl = (custom && custom.dataUrl) || '';
+    }
     await ensureOffscreenDocument();
-    await chrome.runtime.sendMessage({ target: 'offscreen', type: 'PLAY_CHIME' });
+    await chrome.runtime.sendMessage({
+      target: 'offscreen',
+      type: 'PLAY_CHIME',
+      soundSource,
+      customSoundDataUrl,
+    });
   } catch {
     // Ignore audio playback issues so visual notification still delivers cleanly
   }

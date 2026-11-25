@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  MAX_CUSTOM_SOUND_BYTES,
   PRESET_BADGE_COLORS,
+  SOUND_SOURCES,
   THEME_PRESETS,
   buildRestoreUrl,
   computeNextTrigger,
@@ -18,10 +20,12 @@ import {
   formatTime,
   isInjectableUrl,
   isSafeFaviconUrl,
+  normalizeSoundSource,
   normalizeThemeMode,
   normalizeThemePreset,
   normalizeUrlForMatch,
   parseYouTubeUrl,
+  validateCustomAudioMeta,
 } from '../extension/shared/core.js';
 
 test('formatTime formats seconds into MM:SS and H:MM:SS', () => {
@@ -286,4 +290,33 @@ test('computeScrollPercent, computeTargetScrollY, and isSafeFaviconUrl handle la
   assert.equal(isSafeFaviconUrl('data:image/png;base64,AAA'), true);
   assert.equal(isSafeFaviconUrl('javascript:alert(1)'), false);
   assert.equal(isSafeFaviconUrl(''), false);
+});
+
+test('normalizeSoundSource and validateCustomAudioMeta validate sound choices and uploads', () => {
+  assert.deepEqual(SOUND_SOURCES, ['chime', 'sample', 'custom']);
+  assert.equal(normalizeSoundSource('chime'), 'chime');
+  assert.equal(normalizeSoundSource('sample'), 'sample');
+  assert.equal(normalizeSoundSource('custom'), 'custom');
+  assert.equal(normalizeSoundSource('invalid'), 'chime');
+
+  assert.deepEqual(
+    validateCustomAudioMeta({ name: 'sena.mp3', type: 'audio/mpeg', size: 172950 }),
+    { ok: true }
+  );
+  assert.deepEqual(
+    validateCustomAudioMeta({ name: 'bell.wav', type: '', size: 42000 }),
+    { ok: true }
+  );
+  assert.equal(
+    validateCustomAudioMeta({ name: 'script.exe', type: 'application/octet-stream', size: 1000 }).ok,
+    false
+  );
+  assert.equal(
+    validateCustomAudioMeta({ name: 'huge.mp3', type: 'audio/mpeg', size: MAX_CUSTOM_SOUND_BYTES + 1 }).ok,
+    false
+  );
+  assert.equal(
+    validateCustomAudioMeta({ name: 'empty.mp3', type: 'audio/mpeg', size: 0 }).ok,
+    false
+  );
 });

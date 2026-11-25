@@ -15,7 +15,7 @@ Chrome Extension (Manifest V3) gọn nhẹ giúp lưu **đúng khoảnh khắc �
   - Sửa hoặc tắt lịch trực tiếp qua menu `⋯` trên từng thẻ đã lưu.
 - **Thông báo góc trên-phải (Shadow DOM) + System Fallback + Âm thanh nhẹ:**
   - Hiển thị Toast mượt ở góc trên-phải màn hình với nút **Mở ngay** và **Nhắc +15p**, thanh đếm ngược tự tạm dừng khi di chuột vào.
-  - Phát âm thanh chuông nhẹ *"tình tinh"* êm tai (tổng hợp qua Web Audio & Chrome Offscreen API, có nút bật/tắt và nghe thử trong bảng giao diện).
+  - Phát âm thanh chuông nhẹ *"tình tinh"* êm tai (hoặc chọn âm mẫu `sena.mp3` / tải file âm thanh riêng tối đa 2 MB qua menu `⋯` bên cạnh nút bật âm thanh).
   - Gom lịch trùng giờ vào 1 thẻ có nút chuyển `1/N`, tự fallback sang **Chrome Notification** khi bạn đang ở `chrome://newtab` hoặc thu nhỏ trình duyệt.
   - Tổng hợp gọn các lịch bị lỡ khi tắt Chrome thành 1 thông báo duy nhất khi mở lại.
 - **Thao tác nhanh & Cá nhân hóa:**

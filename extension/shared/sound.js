@@ -1,6 +1,19 @@
 /**
- * Synthesize a soft, crystal-clear two-note "tình tinh" chime via Web Audio API.
+ * Notification sound synthesizer & custom audio player for MarkMoment.
  */
+
+let activeAudio = null;
+
+export function stopActiveSound() {
+  if (!activeAudio) return;
+  try {
+    activeAudio.pause();
+    activeAudio.currentTime = 0;
+  } catch {
+    // Ignore audio stop errors
+  }
+  activeAudio = null;
+}
 
 function scheduleBellNote(ctx, destination, startTime, freq, peakGain, duration) {
   const harmonics = [
@@ -28,6 +41,7 @@ function scheduleBellNote(ctx, destination, startTime, freq, peakGain, duration)
 }
 
 export async function playReminderChime() {
+  stopActiveSound();
   const AudioCtx = globalThis.AudioContext || globalThis.webkitAudioContext;
   if (!AudioCtx) return false;
 
@@ -55,4 +69,53 @@ export async function playReminderChime() {
       ctx.close().catch(() => {});
     }, 80);
   }
+}
+
+export async function playAudioFromUrl(src, volume = 0.72) {
+  if (!src) return false;
+  stopActiveSound();
+
+  return new Promise((resolve) => {
+    const audio = new Audio(src);
+    audio.volume = volume;
+    activeAudio = audio;
+
+    let settled = false;
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      if (activeAudio === audio) activeAudio = null;
+      resolve(ok);
+    };
+
+    audio.addEventListener('ended', () => finish(true), { once: true });
+    audio.addEventListener('error', () => finish(false), { once: true });
+
+    audio.play().catch(() => finish(false));
+  });
+}
+
+export async function playNotificationAudio({
+  soundSource = 'chime',
+  customSoundDataUrl = '',
+  sampleUrl = '',
+} = {}) {
+  if (soundSource === 'custom') {
+    if (customSoundDataUrl) {
+      const ok = await playAudioFromUrl(customSoundDataUrl);
+      if (ok) return true;
+    }
+    if (sampleUrl) {
+      const ok = await playAudioFromUrl(sampleUrl);
+      if (ok) return true;
+    }
+    return playReminderChime();
+  }
+
+  if (soundSource === 'sample' && sampleUrl) {
+    const ok = await playAudioFromUrl(sampleUrl);
+    if (ok) return true;
+  }
+
+  return playReminderChime();
 }

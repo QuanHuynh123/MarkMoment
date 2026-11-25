@@ -8,17 +8,20 @@ import {
   formatScheduleBadge,
   formatTime,
   isSafeFaviconUrl,
+  normalizeSoundSource,
   normalizeThemeMode,
   normalizeThemePreset,
 } from '../shared/core.js';
 import {
+  clearCustomSound,
   createId,
   getBookmarks,
+  getCustomSound,
   getMissedIds,
   getSettings,
   updateSettings,
 } from '../shared/storage.js';
-import { playReminderChime } from '../shared/sound.js';
+import { playNotificationAudio } from '../shared/sound.js';
 
 const ICONS = {
   play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>',
@@ -39,9 +42,11 @@ let settings = {
   theme: 'auto',
   themePreset: 'indigo',
   soundEnabled: true,
+  soundSource: 'chime',
   closeTabOnSave: false,
   dndFullscreen: true,
 };
+let customSound = null;
 
 let filterTab = 'saved';
 let filterTag = 'all';
@@ -69,7 +74,13 @@ const btnThemeToggle = document.getElementById('btn-theme-toggle');
 const themePopover = document.getElementById('theme-popover');
 const themePickerAnchor = btnThemeToggle.closest('.theme-picker-anchor');
 const btnSoundTest = document.getElementById('btn-sound-test');
+const btnSoundMore = document.getElementById('btn-sound-more');
 const btnSoundToggle = document.getElementById('btn-sound-toggle');
+const soundDrawer = document.getElementById('sound-drawer');
+const customSoundBox = document.getElementById('custom-sound-box');
+const customSoundName = document.getElementById('custom-sound-name');
+const btnUploadSound = document.getElementById('btn-upload-sound');
+const btnResetSound = document.getElementById('btn-reset-sound');
 const searchBar = document.getElementById('search-bar');
 const searchInput = document.getElementById('search-input');
 
@@ -152,10 +163,33 @@ function applyTheme(theme, themePreset) {
   });
 }
 
-function renderSoundSetting(enabled) {
+function renderSoundSetting(enabled, soundSource) {
   const isOn = enabled !== false;
+  const safeSource = normalizeSoundSource(soundSource);
   btnSoundToggle.setAttribute('aria-checked', String(isOn));
   btnSoundTest.style.opacity = isOn ? '1' : '0.5';
+
+  document.querySelectorAll('[data-sound-source]').forEach((btn) => {
+    btn.setAttribute('aria-pressed', String(btn.dataset.soundSource === safeSource));
+  });
+
+  customSoundBox.classList.toggle('hidden', safeSource !== 'custom');
+  if (customSound && customSound.name) {
+    customSoundName.textContent = customSound.name;
+    btnResetSound.classList.remove('hidden');
+  } else {
+    customSoundName.textContent = 'sena.mp3 (mẫu sẵn)';
+    btnResetSound.classList.add('hidden');
+  }
+}
+
+function previewSelectedSound() {
+  const sampleUrl = chrome?.runtime?.getURL ? chrome.runtime.getURL('assets/sena.mp3') : '';
+  return playNotificationAudio({
+    soundSource: normalizeSoundSource(settings.soundSource),
+    customSoundDataUrl: (customSound && customSound.dataUrl) || '',
+    sampleUrl,
+  });
 }
 
 function getChromeFaviconFallbackUrl(pageUrl) {
@@ -469,7 +503,7 @@ function renderBookmarkList() {
     return;
   }
 
-  for (const bm of visible) {
+  visible.forEach((bm, idx) => {
     const card = document.createElement('article');
     const isMenuOpen = openMenuCardId === bm.id;
     card.className = `bookmark-card${isMenuOpen ? ' menu-open' : ''}`;
@@ -562,7 +596,8 @@ function renderBookmarkList() {
 
     if (isMenuOpen) {
       const menu = document.createElement('div');
-      menu.className = 'row-menu';
+      const openUp = visible.length >= 2 && idx === visible.length - 1;
+      menu.className = `row-menu${openUp ? ' open-up' : ''}`;
       menu.setAttribute('role', 'menu');
 
       const schedItem = document.createElement('button');
@@ -605,7 +640,7 @@ function renderBookmarkList() {
     }
 
     bookmarkList.appendChild(card);
-  }
+  });
 }
 
 // ---------- DATA LOADING ----------
@@ -690,15 +725,47 @@ document.querySelectorAll('[data-theme-preset]').forEach((btn) => {
 });
 
 btnSoundTest.addEventListener('click', () => {
-  playReminderChime().catch(() => {});
+  previewSelectedSound().catch(() => {});
+});
+
+btnSoundMore.addEventListener('click', () => {
+  const willOpen = soundDrawer.classList.contains('hidden');
+  soundDrawer.classList.toggle('hidden', !willOpen);
+  btnSoundMore.setAttribute('aria-expanded', String(willOpen));
+});
+
+document.querySelectorAll('[data-sound-source]').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const nextSource = normalizeSoundSource(btn.dataset.soundSource);
+    settings = await updateSettings({ soundSource: nextSource, soundEnabled: true });
+    renderSoundSetting(settings.soundEnabled, settings.soundSource);
+    previewSelectedSound().catch(() => {});
+  });
+});
+
+btnUploadSound.addEventListener('click', () => {
+  const pickerUrl = chrome.runtime.getURL('options/sound.html');
+  chrome.windows.create({
+    url: pickerUrl,
+    type: 'popup',
+    width: 390,
+    height: 360,
+  });
+});
+
+btnResetSound.addEventListener('click', async () => {
+  await clearCustomSound();
+  customSound = null;
+  renderSoundSetting(settings.soundEnabled, settings.soundSource);
+  previewSelectedSound().catch(() => {});
 });
 
 btnSoundToggle.addEventListener('click', async () => {
   const nextSound = settings.soundEnabled === false;
   settings = await updateSettings({ soundEnabled: nextSound });
-  renderSoundSetting(settings.soundEnabled);
+  renderSoundSetting(settings.soundEnabled, settings.soundSource);
   if (nextSound) {
-    playReminderChime().catch(() => {});
+    previewSelectedSound().catch(() => {});
   }
 });
 
@@ -875,9 +942,14 @@ btnUndo.addEventListener('click', async () => {
 
 // ---------- INIT ----------
 async function init() {
-  settings = await getSettings();
+  const [loadedSettings, loadedCustomSound] = await Promise.all([
+    getSettings(),
+    getCustomSound(),
+  ]);
+  settings = loadedSettings;
+  customSound = loadedCustomSound;
   applyTheme(settings.theme, settings.themePreset);
-  renderSoundSetting(settings.soundEnabled);
+  renderSoundSetting(settings.soundEnabled, settings.soundSource);
   chkCloseTab.checked = Boolean(settings.closeTabOnSave);
   resetDraftSchedule();
 

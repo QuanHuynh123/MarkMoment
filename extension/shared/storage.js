@@ -7,12 +7,14 @@ const KEYS = {
   SETTINGS: 'mm_settings',
   PENDING_RESTORES: 'mm_pending_restores',
   MISSED_IDS: 'mm_missed_ids',
+  CUSTOM_SOUND: 'mm_custom_sound',
 };
 
 export const DEFAULT_SETTINGS = {
   theme: 'auto',
   themePreset: 'indigo',
   soundEnabled: true,
+  soundSource: 'chime',
   closeTabOnSave: false,
   dndFullscreen: true,
 };
@@ -113,4 +115,19 @@ export async function setMissedIds(ids) {
 
 export async function clearMissedIds() {
   await chrome.storage.local.set({ [KEYS.MISSED_IDS]: [] });
+}
+
+export async function getCustomSound() {
+  const data = await chrome.storage.local.get(KEYS.CUSTOM_SOUND);
+  const val = data[KEYS.CUSTOM_SOUND];
+  return val && typeof val === 'object' && val.dataUrl ? val : null;
+}
+
+export async function saveCustomSound(soundObj) {
+  await chrome.storage.local.set({ [KEYS.CUSTOM_SOUND]: soundObj });
+  return soundObj;
+}
+
+export async function clearCustomSound() {
+  await chrome.storage.local.remove(KEYS.CUSTOM_SOUND);
 }

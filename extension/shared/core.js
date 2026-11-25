@@ -20,6 +20,40 @@ export function normalizeThemeMode(mode) {
   return mode === 'light' || mode === 'dark' || mode === 'auto' ? mode : 'auto';
 }
 
+export const SOUND_SOURCES = ['chime', 'sample', 'custom'];
+export const MAX_CUSTOM_SOUND_BYTES = 2 * 1024 * 1024;
+const AUDIO_EXT_RE = /\.(mp3|wav|ogg|m4a|webm|aac)$/i;
+
+export function normalizeSoundSource(source) {
+  return SOUND_SOURCES.includes(source) ? source : 'chime';
+}
+
+/**
+ * Validate metadata of a user-selected custom notification sound file.
+ * @param {{ name?: string, type?: string, size?: number }} file
+ * @returns {{ ok: true } | { ok: false, error: string }}
+ */
+export function validateCustomAudioMeta(file) {
+  if (!file || typeof file !== 'object') {
+    return { ok: false, error: 'Chưa chọn file âm thanh.' };
+  }
+  const name = typeof file.name === 'string' ? file.name.trim() : '';
+  const type = typeof file.type === 'string' ? file.type.trim().toLowerCase() : '';
+  const size = Number(file.size || 0);
+
+  const isAudioType = type.startsWith('audio/') || AUDIO_EXT_RE.test(name);
+  if (!isAudioType) {
+    return { ok: false, error: 'Chỉ hỗ trợ file âm thanh (.mp3, .wav, .ogg, .m4a).' };
+  }
+  if (!Number.isFinite(size) || size <= 0) {
+    return { ok: false, error: 'File âm thanh rỗng hoặc không hợp lệ.' };
+  }
+  if (size > MAX_CUSTOM_SOUND_BYTES) {
+    return { ok: false, error: 'File vượt quá giới hạn 2 MB. Hãy chọn đoạn ngắn hơn.' };
+  }
+  return { ok: true };
+}
+
 const DAY_NAMES_VI = {
   1: 'T2',
   2: 'T3',

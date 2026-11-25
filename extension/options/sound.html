@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tùy chỉnh âm thanh — MarkMoment</title>
+  <link rel="stylesheet" href="../popup/popup.css" />
+  <style>
+    html,
+    body {
+      width: auto;
+      min-height: 100vh;
+      margin: 0;
+      padding: 12px;
+      background: var(--frame-bg);
+    }
+    .picker-shell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .picker-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .picker-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .picker-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .picker-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+    .dropzone {
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 12px;
+      background: var(--surface-subtle);
+      padding: 16px 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: border-color 160ms ease, background-color 160ms ease;
+    }
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .dropzone svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+    }
+    .dropzone-main {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .dropzone-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .sample-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+    }
+    .sample-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .sample-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sample-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .sample-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .picker-status {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      min-height: 16px;
+    }
+    .picker-status.error {
+      color: var(--danger);
+    }
+    .picker-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <main class="picker-shell">
+    <div class="picker-head">
+      <div class="picker-title-wrap">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </span>
+        <div>
+          <div class="picker-title">Âm thanh nhắc tùy chọn</div>
+          <div class="picker-sub">Hỗ trợ .mp3, .wav, .ogg, .m4a (tối đa 2 MB)</div>
+        </div>
+      </div>
+    </div>
+
+    <label for="audio-file-input" id="dropzone" class="dropzone" tabindex="0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+      <span class="dropzone-main">Chọn hoặc kéo thả file âm thanh vào đây</span>
+      <span class="dropzone-hint">Tự động lưu cục bộ &amp; phát khi đến giờ hẹn</span>
+      <input id="audio-file-input" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a" class="sr-only" />
+    </label>
+
+    <div class="sample-card">
+      <div class="sample-info">
+        <div id="active-sound-name" class="sample-name">sena.mp3 (mẫu sẵn)</div>
+        <div id="active-sound-desc" class="sample-desc">Đang dùng âm mẫu mặc định khi chọn Tự chọn</div>
+      </div>
+      <div class="sample-actions">
+        <button id="btn-preview-active" type="button" class="chip-btn">Nghe thử</button>
+        <button id="btn-use-sample" type="button" class="text-link hidden">Dùng mẫu sena</button>
+      </div>
+    </div>
+
+    <div id="picker-status" class="picker-status" role="status" aria-live="polite"></div>
+
+    <div class="picker-footer">
+      <button id="btn-preview-sample" type="button" class="btn-ghost-sm">Nghe mẫu sena.mp3</button>
+      <button id="btn-done" type="button" class="btn-primary">Xong</button>
+    </div>
+  </main>
+
+  <script type="module" src="sound.js"></script>
+</body>
+</html>
